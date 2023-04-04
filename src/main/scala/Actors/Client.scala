@@ -20,12 +20,12 @@ class Client(store: ActorRef[Store.Command], context: ActorContext[Client.Comman
   override def onMessage(msg: Command): Behavior[Command] = {
     msg match {
       case Set(key, value) =>
-        context.log.info(s"Set $key -> $value")
-        store ! Store.Set(context.self, key.getBytes, value.getBytes)
+        val printer = context.spawnAnonymous(Printer())
+        store ! Store.Set(printer, key.getBytes, value.getBytes)
         Behaviors.same
       case Get(key) =>
-        context.log.info(s"Get $key")
-        store ! Store.Get(context.self, key.getBytes)
+        val printer = context.spawnAnonymous(Printer())
+        store ! Store.Get(printer, key.getBytes)
         Behaviors.same
     }
   }

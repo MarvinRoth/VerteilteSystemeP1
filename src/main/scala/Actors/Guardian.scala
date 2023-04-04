@@ -14,8 +14,9 @@ object Guardian {
     client1 ! Client.Get("DE")
     client1 ! Client.Get("IT")
     val reader = context.spawn(FileReader(), "reader")
-    val filename = "/tmp/trip_data.csv"
+    val filename = "src/main/resources/trip_data_1000_000.csv"
     reader ! FileReader.File(filename, client1)
+    Behaviors.same
   }
 
 }

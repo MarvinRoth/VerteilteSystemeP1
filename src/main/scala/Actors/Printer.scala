@@ -23,15 +23,19 @@ class Printer(context: ActorContext[Result]) extends AbstractBehavior[Result](co
   override def onMessage(msg: Result): Behavior[Result] = {
     msg match{
       case SuccessSet(key,value) =>
-        context.log.info(s"Success: Value of Key: $key is now $value")
+        val keyString = new String(key.toArray)
+        val valueString = new String(value.toArray)
+        context.log.info(s"Success: Value of Key: $keyString is now $valueString")
         Behaviors.stopped
       case FailureGet(key) =>
-        context.log.info(s"Failure: No value found for Key: $key")
+        val keyString = new String(key.toArray)
+        context.log.info(s"Failure: No value found for Key: $keyString")
         Behaviors.stopped
       case SuccessGet(key, value) =>
-        context.log.info(s"At Key: $key, Value is: $value")
+        val keyString = new String(key.toArray)
+        val valueString = new String(value.toArray)
+        context.log.info(s"At Key: $keyString, Value is: $valueString")
         Behaviors.stopped
     }
-
   }
 }
