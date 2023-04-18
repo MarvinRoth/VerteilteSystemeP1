@@ -1,18 +1,14 @@
-import Actors.Guardian
-import akka.NotUsed
+import Actors.{Client, FileReader, Guardian, ResultActor, Store}
 import akka.actor.typed.scaladsl.Behaviors
-import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
-import akka.util.LineNumbers.Result
+import akka.actor.typed.ActorSystem
+import akka.actor.typed.receptionist.Receptionist
 
-import scala.collection.mutable.Map
 object Main {
   def main(args: Array[String]): Unit = {
-
-    val system = ActorSystem(Guardian(), "hfu")
-
+    val system = ActorSystem.create(Guardian(), "main-sytem")
     println("Press ENTER to exit the system")
     scala.io.StdIn.readLine()
-    system.terminate()
 
+    system.terminate()
   }
 }
