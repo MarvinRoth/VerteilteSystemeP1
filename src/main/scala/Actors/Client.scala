@@ -14,12 +14,13 @@ object Client {
   case object Finished extends Command
   private case class StoreUpdate(store: ActorRef[Store.Command]) extends Command
 
+  val ClientServiceKey: ServiceKey[Command] = ServiceKey[Client.Command]("ClientService")
+
   def apply(): Behavior[Command] =
     Behaviors.setup { context =>
-      Behaviors.receiveMessage {
-        msg: Command => new Client(None, context).onMessage(msg)
+        context.system.receptionist ! Receptionist.Register(ClientServiceKey, context.self)
+        new Client(None, context)
       }
-    }
 }
 
 class Client(store: Option[ActorRef[Store.Command]], context: ActorContext[Client.Command]) extends AbstractBehavior[Client.Command](context){
@@ -37,12 +38,12 @@ class Client(store: Option[ActorRef[Store.Command]], context: ActorContext[Clien
   }
 
   override def onMessage(msg: Command): Behavior[Command] = {
+    val printer = context.spawnAnonymous(Printer())
     msg match {
       case StoreUpdate(newStore) =>
         new Client(Some(newStore), context)
 
       case _ if store.isDefined =>
-        val printer = context.spawnAnonymous(Printer())
         msg match {
           case BatchSet(pairs) =>
             pairs.foreach(pair => store.get ! Store.Set(printer, pair._1.getBytes, pair._2.getBytes))
@@ -59,8 +60,17 @@ class Client(store: Option[ActorRef[Store.Command]], context: ActorContext[Clien
         }
 
       case _ =>
-        // Store reference not yet received; ignore other messages
-
+        msg match {
+          case BatchSet(pairs) =>
+            context.self ! BatchSet(pairs)
+            Behaviors.same
+          case Set(key, value) =>
+            context.self ! Set(key, value)
+            Behaviors.same
+          case Get(key) =>
+            context.self ! Get(key)
+            Behaviors.same
+        }
         Behaviors.same
     }
   }

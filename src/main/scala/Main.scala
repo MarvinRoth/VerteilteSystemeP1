@@ -10,6 +10,7 @@ object Main {
 
     val system = ActorSystem(Guardian(), "hfu")
 
+    scala.io.StdIn.readLine()
     println("Press ENTER to exit the system")
     scala.io.StdIn.readLine()
     system.terminate()

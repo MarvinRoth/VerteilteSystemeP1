@@ -19,7 +19,6 @@ object Store {
     Behaviors.setup{ context =>
     context.system.receptionist ! Receptionist.Register(StoreServiceKey, context.self)
     new Store(context)
-
   }
 }
 class Store(context: ActorContext[Store.Command]) extends AbstractBehavior[Store.Command](context) {
