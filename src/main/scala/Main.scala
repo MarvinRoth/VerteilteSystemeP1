@@ -8,7 +8,7 @@ import scala.collection.mutable.Map
 object Main {
   def main(args: Array[String]): Unit = {
 
-    val configuration = utils.Utils.getConfig(25253)
+    val configuration = utils.Utils.getConfig(25252)
     val system = ActorSystem(Guardian(), "hfu", configuration)
 
     scala.io.StdIn.readLine()

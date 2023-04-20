@@ -47,7 +47,7 @@ class FileReader(client: Option[ActorRef[Client.Command]],context: ActorContext[
           case File(filename, batchSize) =>
             val source = Source.fromFile(filename)
             val lines = source.getLines().toSeq
-            lines.grouped(batchSize).collectFirst { batch =>
+            lines.grouped(batchSize).foreach { batch =>
               val pairs = batch.flatMap { line =>
                 val fields = line.split(",")
                 if (fields.length >= 2) {
