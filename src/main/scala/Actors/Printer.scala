@@ -10,6 +10,7 @@ sealed trait Result
   case class SetResult(key: Seq[Byte], success: Boolean) extends Result
   case class GetResult(key: Seq[Byte], value: Option[Seq[Byte]]) extends Result
   case class PrintCount(count: Int) extends Result
+  case class SetBatch(keys: Seq[Seq[Byte]]) extends Result
 
   def apply(): Behavior[Result] =
     Behaviors.setup {
@@ -22,6 +23,9 @@ class Printer(context: ActorContext[Result]) extends AbstractBehavior[Result](co
   import Printer._
   override def onMessage(msg: Result): Behavior[Result] = {
     msg match{
+      case SetBatch(keys) =>
+        keys.foreach(key => context.log.info(s"Set Successful: Key: ${new String(key.toArray)} successfully set"))
+        this
       case SetResult(key, success) =>
         if (success) {
           context.log.info(s"Set Successful: Key: ${new String(key.toArray)} successfully set")

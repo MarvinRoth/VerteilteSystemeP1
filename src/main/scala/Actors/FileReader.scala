@@ -4,10 +4,11 @@ import akka.actor.typed.receptionist.{Receptionist, ServiceKey}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 
+import scala.concurrent.duration.DurationInt
 import scala.io.Source
 
 object FileReader {
-  sealed trait Message extends utils.Serializable
+  sealed trait Message
   case class File(filename:String, batchSize: Int) extends Message
   private case class ClientUpdate(store: ActorRef[Client.Command]) extends Message
 
@@ -15,19 +16,23 @@ object FileReader {
   def apply(): Behavior[Message] =
     Behaviors.setup { context =>
       context.system.receptionist ! Receptionist.Register(ReaderServiceKey, context.self)
-    new FileReader(None,context)
+      new FileReader(None,context)
   }
 }
 
 class FileReader(client: Option[ActorRef[Client.Command]],context: ActorContext[FileReader.Message]) extends AbstractBehavior[FileReader.Message](context) {
   import FileReader._
 
-  if (client.isEmpty) {
+  val delay = 5.seconds
+
+  private def findClient(): Unit = {
+
     context.spawnAnonymous(Behaviors.setup[Receptionist.Listing] { ctx =>
       ctx.system.receptionist ! Receptionist.Find(Client.ClientServiceKey, ctx.self)
       Behaviors.receiveMessage {
         case Client.ClientServiceKey.Listing(clientRefs) =>
-          context.self ! ClientUpdate(clientRefs.headOption.orNull)
+          if(clientRefs.nonEmpty)
+            context.scheduleOnce(delay, context.self, ClientUpdate(clientRefs.headOption.orNull))
           Behaviors.same
       }
     })
@@ -37,12 +42,12 @@ class FileReader(client: Option[ActorRef[Client.Command]],context: ActorContext[
     msg match {
       case ClientUpdate(newClient) =>
         new FileReader(Some(newClient), context)
-      case _ if client.isDefined =>
+      case _ if client.nonEmpty =>
         msg match {
           case File(filename, batchSize) =>
             val source = Source.fromFile(filename)
             val lines = source.getLines().toSeq
-            lines.grouped(batchSize).foreach { batch =>
+            lines.grouped(batchSize).collectFirst { batch =>
               val pairs = batch.flatMap { line =>
                 val fields = line.split(",")
                 if (fields.length >= 2) {
@@ -60,6 +65,7 @@ class FileReader(client: Option[ActorRef[Client.Command]],context: ActorContext[
         }
       case File(filename, batchSize) =>
         context.self ! File(filename, batchSize)
+        findClient()
         this
     }
   }

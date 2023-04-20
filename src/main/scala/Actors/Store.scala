@@ -4,21 +4,22 @@ import akka.actor.typed.receptionist.{Receptionist, ServiceKey}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 
-import scala.collection.mutable
+import scala.collection.{immutable, mutable}
 
 object Store {
 
-  sealed trait Command extends utils.Serializable
+  sealed trait Command
   case class Get(replyTo: ActorRef[Result], key: Seq[Byte]) extends Command
   case class Set(replyTo: ActorRef[Result], key: Seq[Byte], value: Seq[Byte]) extends Command
   case class Count(replyTo: ActorRef[Result]) extends Command
+  case class SetBatch(replyTo: ActorRef[Result], pairs: immutable.Seq[(String,String)]) extends Command
 
   val StoreServiceKey: ServiceKey[Command] = ServiceKey[Store.Command]("StoreService")
 
   def apply(): Behavior[Command] =
     Behaviors.setup{ context =>
-    context.system.receptionist ! Receptionist.Register(StoreServiceKey, context.self)
-    new Store(context)
+      context.system.receptionist ! Receptionist.Register(StoreServiceKey, context.self)
+      new Store(context)
   }
 }
 class Store(context: ActorContext[Store.Command]) extends AbstractBehavior[Store.Command](context) {
@@ -33,6 +34,10 @@ class Store(context: ActorContext[Store.Command]) extends AbstractBehavior[Store
       case Set(replyTo, key, value) =>
         storage.put(key, value)
         replyTo ! SetResult(key, success = true)
+        this
+      case SetBatch(replyTo, pairs) =>
+        pairs.foreach(pair => storage.put(pair._1.getBytes(), pair._2.getBytes()))
+        replyTo ! Printer.SetBatch(pairs.map(p => p._1.getBytes))
         this
       case Count(replyTo) =>
         replyTo ! PrintCount(storage.size)
