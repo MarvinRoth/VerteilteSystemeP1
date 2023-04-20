@@ -8,7 +8,8 @@ import scala.collection.mutable.Map
 object Main {
   def main(args: Array[String]): Unit = {
 
-    val system = ActorSystem(Guardian(), "hfu")
+    val configuration = utils.Utils.getConfig(25251)
+    val system = ActorSystem(Guardian(), "hfu", configuration)
 
     scala.io.StdIn.readLine()
     println("Press ENTER to exit the system")

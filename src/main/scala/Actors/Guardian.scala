@@ -8,6 +8,8 @@ import akka.actor.typed.scaladsl.Behaviors
 object Guardian {
   def apply(): Behavior[Receptionist.Listing] = Behaviors.setup[Receptionist.Listing] { context =>
 
+
+
     context.spawnAnonymous(Store())
     context.system.receptionist ! Receptionist.Subscribe(Store.StoreServiceKey, context.self)
     val client1 = context.spawn(Client(), "client1")

@@ -7,7 +7,7 @@ import akka.actor.typed.{ActorRef, Behavior}
 import scala.collection.Seq
 
 object Client {
-  sealed trait Command
+  sealed trait Command extends utils.Serializable
   case class Set(key: String, value: String) extends Command
   case class Get(key: String) extends Command
   case class BatchSet(pairs: Seq[(String, String)]) extends Command

@@ -8,7 +8,7 @@ import scala.collection.mutable
 
 object Store {
 
-  sealed trait Command
+  sealed trait Command extends utils.Serializable
   case class Get(replyTo: ActorRef[Result], key: Seq[Byte]) extends Command
   case class Set(replyTo: ActorRef[Result], key: Seq[Byte], value: Seq[Byte]) extends Command
   case class Count(replyTo: ActorRef[Result]) extends Command

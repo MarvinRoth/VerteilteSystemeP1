@@ -7,7 +7,7 @@ import akka.actor.typed.{ActorRef, Behavior}
 import scala.io.Source
 
 object FileReader {
-  sealed trait Message
+  sealed trait Message extends utils.Serializable
   case class File(filename:String, batchSize: Int) extends Message
   private case class ClientUpdate(store: ActorRef[Client.Command]) extends Message
 
